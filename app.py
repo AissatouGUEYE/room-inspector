@@ -244,25 +244,37 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ── CLÉ API ────────────────────────────────────────────────────────────────────
-with st.expander("🔑 Clé API Groq", expanded="groq_key" not in st.session_state):
-    st.markdown("""
-    <div class="key-box">
-      1. Va sur <strong>console.groq.com/keys</strong><br>
-      2. Connecte-toi avec Google / GitHub (gratuit)<br>
-      3. Clique <strong>Create API key</strong><br>
-      4. Colle la clé ici 👇 (commence par <code>gsk_...</code>)
-    </div>
-    """, unsafe_allow_html=True)
-    key_input = st.text_input("Clé API Groq", type="password",
-                               placeholder="gsk_...",
-                               value=st.session_state.get("groq_key",""))
-    if st.button("💾 Enregistrer"):
-        if len(key_input) > 10:
-            st.session_state["groq_key"] = key_input
-            st.success("✅ Clé enregistrée !")
-            st.rerun()
-        else:
-            st.error("Clé trop courte.")
+# Priorité : 1) session, 2) secrets Streamlit, 3) variable d'environnement
+import os
+if "groq_key" not in st.session_state:
+    try:
+        st.session_state["groq_key"] = st.secrets["GROQ_API_KEY"]
+    except Exception:
+        env_key = os.environ.get("GROQ_API_KEY", "")
+        if env_key:
+            st.session_state["groq_key"] = env_key
+
+# N'afficher le formulaire que si aucune clé n'a été trouvée automatiquement
+if "groq_key" not in st.session_state:
+    with st.expander("🔑 Clé API Groq", expanded=True):
+        st.markdown("""
+        <div class="key-box">
+          1. Va sur <strong>console.groq.com/keys</strong><br>
+          2. Connecte-toi avec Google / GitHub (gratuit)<br>
+          3. Clique <strong>Create API key</strong><br>
+          4. Colle la clé ici 👇 (commence par <code>gsk_...</code>)
+        </div>
+        """, unsafe_allow_html=True)
+        key_input = st.text_input("Clé API Groq", type="password",
+                                   placeholder="gsk_...",
+                                   value="")
+        if st.button("💾 Enregistrer"):
+            if len(key_input) > 10:
+                st.session_state["groq_key"] = key_input
+                st.success("✅ Clé enregistrée !")
+                st.rerun()
+            else:
+                st.error("Clé trop courte.")
 
 if "groq_key" not in st.session_state:
     st.markdown("""
